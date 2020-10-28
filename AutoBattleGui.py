@@ -1,6 +1,6 @@
 import tkinter as tk
 import pyautogui
-from time import sleep, time, localtime, strftime
+from time import localtime, sleep, strftime, time
 
 # Set configuration
 running = True
@@ -66,9 +66,12 @@ def start():
     counts = 1
     battles = int(battle_entry.get())
     time_per_battle = int(time_entry.get())
-    whole_time_cost = (time_per_battle + 30) * battles
+    total_time_cost = (time_per_battle + 30) * battles
+    cost_min = total_time_cost // 60
+    cost_second = total_time_cost % 60
+
     print('----------Ready----------')
-    print(f'Expected {battles} Battles in {whole_time_cost}s')
+    print(f'Expected {battles} Battles in {cost_min}m {cost_second}s')
     print('----------Ready----------')
 
 
