@@ -3,14 +3,6 @@ import cv2
 from time import localtime, sleep, strftime, time
 from pynput.keyboard import Key, Listener
 
-# Load needed images
-img_stage_one = cv2.imread('pic/stage_one.png')
-img_stage_two = cv2.imread('pic/stage_two.png')
-img_complete = cv2.imread('pic/complete.png')
-
-running = True
-stop_key = Key.esc
-
 
 def on_press(key):
     global running
@@ -89,6 +81,15 @@ class AutoBattle:
 
 
 if __name__ == '__main__':
+
+    # Set up and load needed images
+    running = True
+    stop_key = Key.esc
+
+    img_stage_one = cv2.imread('pic/stage_one.png')
+    img_stage_two = cv2.imread('pic/stage_two.png')
+    img_complete = cv2.imread('pic/complete.png')
+
     lis = Listener(on_press=on_press)
     lis.start()
 
