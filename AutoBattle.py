@@ -1,21 +1,36 @@
 import pyautogui
+import cv2
 from time import localtime, sleep, strftime, time
 
-# Set configurations
-battles = int(input('要執行幾場戰鬥：'))
-time_per_battle = int(input('預計每場戰鬥花費時間(s)：'))
-predict_time_cost = (time_per_battle + 30) * battles
-cost_min = predict_time_cost // 60
-cost_second = predict_time_cost % 60
-print(f'預計總花費時間為 {cost_min}分{cost_second}秒')
-print('自動戰鬥將於5秒後開始......')
-print('Press Ctrl + C to stop program')
+
+# Load needed images
+img_stage_one = cv2.imread('pic/stage_one.png')
+img_stage_two = cv2.imread('pic/stage_two.png')
+img_complete = cv2.imread('pic/complete.png')
 
 
-class Arknight:
+class AutoBattle:
+
+    @classmethod
+    def start(cls):
+        # Set configurations
+        battles = int(input('要執行幾場戰鬥：'))
+        time_per_battle = int(input('預計每場戰鬥花費時間(s)：'))
+        predict_time_cost = (time_per_battle + 30) * battles
+        cost_min = predict_time_cost // 60
+        cost_second = predict_time_cost % 60
+        print(f'預計總花費時間為 {cost_min}分{cost_second}秒')
+
+        # Messages before start
+        print('自動戰鬥將於5秒後開始......')
+        print('Press Ctrl + C to stop program \n')
+        sleep(5)
+
+        # Start battles
+        cls.battle(battles, time_per_battle)
 
     @staticmethod
-    def battle():
+    def battle(battles, time_per_battle):
         initial_time = int(time())
 
         for i in range(battles):
@@ -24,9 +39,9 @@ class Arknight:
             counts = 1
             print(f'----------Battle({i + 1}) starts at {start_time_str}----------')
             while True:
-                stage_one = pyautogui.locateCenterOnScreen('pic/start_1.png', confidence=0.8)
-                stage_two = pyautogui.locateCenterOnScreen('pic/start_2.png', confidence=0.8)
-                stage_complete = pyautogui.locateCenterOnScreen('pic/complete.png', confidence=0.8)
+                stage_one = pyautogui.locateCenterOnScreen(img_stage_one, confidence=0.8)
+                stage_two = pyautogui.locateCenterOnScreen(img_stage_two, confidence=0.8)
+                stage_complete = pyautogui.locateCenterOnScreen(img_complete, confidence=0.8)
                 if stage_one:
                     pyautogui.click(stage_one, clicks=2, interval=0.25)
                     print(f'Completed Stage One')
@@ -48,6 +63,7 @@ class Arknight:
                     counts += 1
                     sleep(5)
 
+        # Calculate total cost time
         complete_time = int(time())
         final_time_cost = complete_time - initial_time
         final_cost_min = final_time_cost // 60
@@ -56,5 +72,4 @@ class Arknight:
 
 
 if __name__ == '__main__':
-    sleep(5)
-    Arknight.battle()
+    AutoBattle.start()
