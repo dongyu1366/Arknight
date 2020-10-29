@@ -1,12 +1,22 @@
 import pyautogui
 import cv2
 from time import localtime, sleep, strftime, time
-
+from pynput.keyboard import Key, Listener
 
 # Load needed images
 img_stage_one = cv2.imread('pic/stage_one.png')
 img_stage_two = cv2.imread('pic/stage_two.png')
 img_complete = cv2.imread('pic/complete.png')
+
+running = True
+stop_key = Key.esc
+
+
+def on_press(key):
+    global running
+    if key == stop_key:
+        running = False
+        print('程式中止中，請稍後！')
 
 
 class AutoBattle:
@@ -23,7 +33,9 @@ class AutoBattle:
 
         # Messages before start
         print('自動戰鬥將於5秒後開始......')
-        print('Press Ctrl + C to stop program \n')
+        print('============================')
+        print('==   Press Esc to stop!   ==')
+        print('============================')
         sleep(5)
 
         # Start battles
@@ -31,14 +43,18 @@ class AutoBattle:
 
     @staticmethod
     def battle(battles, time_per_battle):
+        finish_battles = 0
         initial_time = int(time())
 
         for i in range(battles):
+            if not running:
+                break
+
             start_time = time()
             start_time_str = strftime('%H:%M:%S', localtime(start_time))
             counts = 1
             print(f'----------Battle({i + 1}) starts at {start_time_str}----------')
-            while True:
+            while running:
                 stage_one = pyautogui.locateCenterOnScreen(img_stage_one, confidence=0.8)
                 stage_two = pyautogui.locateCenterOnScreen(img_stage_two, confidence=0.8)
                 stage_complete = pyautogui.locateCenterOnScreen(img_complete, confidence=0.8)
@@ -54,6 +70,7 @@ class AutoBattle:
                     sleep(2)
                     pyautogui.click(stage_complete, clicks=2, interval=0.25)
                     sleep(5)
+                    finish_battles += 1
                     end_time = time()
                     cost_time = round(end_time - start_time, 2)
                     print(f'Completed Battle({i + 1}) in {cost_time}s!')
@@ -68,8 +85,13 @@ class AutoBattle:
         final_time_cost = complete_time - initial_time
         final_cost_min = final_time_cost // 60
         final_cost_second = final_time_cost % 60
-        print(f'實際總花費時間為 {final_cost_min}分{final_cost_second}秒')
+        print(f'完成{finish_battles}場戰鬥，總花費時間為 {final_cost_min}分{final_cost_second}秒')
 
 
 if __name__ == '__main__':
+    lis = Listener(on_press=on_press)
+    lis.start()
+
     AutoBattle.start()
+
+    lis.stop()
