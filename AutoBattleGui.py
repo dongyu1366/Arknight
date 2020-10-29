@@ -1,8 +1,9 @@
 import tkinter as tk
 import pyautogui
+import sys
 from time import localtime, sleep, strftime, time
 
-# Set configuration
+# Set configurations
 running = True
 battles = 0
 time_per_battle = 100
@@ -81,14 +82,35 @@ def stop():
     print('----------Stop----------')
 
 
+class PrintLogger:
+    def __init__(self, textbox):
+        self.textbox = textbox
+
+    def write(self, text):
+        # write text to textbox
+        # could also scroll to end of textbox here to make sure always visible
+        self.textbox.insert(tk.END, text)
+
+    def flush(self):
+        pass
+
+
 # Set up GUI
 window = tk.Tk()
 window.title('ARKNIGHTS APP')
-window.geometry('300x300')
+window.geometry('400x450')
 window.configure(background='white')
 
 header_label = tk.Label(window, text='Auto Battle')
 header_label.pack()
+
+# Set the number of battles
+battle_frame = tk.Frame(window)
+battle_frame.pack(side=tk.TOP)
+battle_label = tk.Label(battle_frame, text='要打幾場')
+battle_label.pack(side=tk.LEFT)
+battle_entry = tk.Entry(battle_frame)
+battle_entry.pack(side=tk.LEFT)
 
 # Set estimated time of a battle
 time_frame = tk.Frame(window)
@@ -98,16 +120,11 @@ time_label.pack(side=tk.LEFT)
 time_entry = tk.Entry(time_frame)
 time_entry.pack(side=tk.LEFT)
 
-# Set the number of battles
-battle_frame = tk.Frame(window)
-battle_frame.pack(side=tk.TOP)
-battle_label = tk.Label(battle_frame, text='要打幾場')
-battle_label.pack(side=tk.LEFT)
-battle_entry = tk.Entry(battle_frame)
-battle_entry.pack(side=tk.LEFT)
+# Confirm button
 confirm_btn = tk.Button(text='Confirm', command=start)
 confirm_btn.pack()
 
+# Start and Stop Button
 button_frame = tk.Frame(window)
 button_frame.pack(side=tk.TOP)
 start_btn = tk.Button(button_frame, text='Start', command=start_battle)
@@ -115,5 +132,19 @@ start_btn.pack(side=tk.LEFT)
 stop_btn = tk.Button(button_frame, text='Stop', command=stop)
 stop_btn.pack(side=tk.LEFT)
 
+
+# Log area
+log_frame = tk.Frame(window)
+log_frame.pack(side=tk.TOP)
+Y_scrollbar = tk.Scrollbar(log_frame)
+log = tk.Text(log_frame, height=20, width=50)
+Y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+log.pack(side=tk.LEFT, fill=tk.Y)
+Y_scrollbar.config(command=log.yview)
+log.config(yscrollcommand=Y_scrollbar.set)
+# Replace sys.stdout with our object
+sys.stdout = PrintLogger(log)
+
 # 運行主程式
-window.mainloop()
+if __name__ == '__main__':
+    window.mainloop()
