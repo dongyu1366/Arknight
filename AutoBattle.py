@@ -17,6 +17,10 @@ class AutoBattle:
     img_stage_two = cv2.imread('pic/stage_two.png')
     img_complete = cv2.imread('pic/complete.png')
 
+    def __init__(self):
+        self.battle_round = 1
+        self.finish_battles = 0
+
     @classmethod
     def initialize(cls):
         # Expected costing time
@@ -41,14 +45,14 @@ class AutoBattle:
             q.put(waiting_time)
             q.put(complete)
 
-    @classmethod
-    def battle(cls, battle_round):
+    def click_target(self):
         if running:
+            # Search target images
             q = Queue()
-            threads = [threading.Thread(target=cls.search_target, args=(q, cls.img_stage_one, 1, 3, False,)),
-                       threading.Thread(target=cls.search_target,
-                                        args=(q, cls.img_stage_two, 2, (cls.time_per_battle - 20), False,)),
-                       threading.Thread(target=cls.search_target, args=(q, cls.img_complete, 3, 5, True,))]
+            threads = [threading.Thread(target=self.search_target, args=(q, self.img_stage_one, 1, 3, False,)),
+                       threading.Thread(target=self.search_target,
+                                        args=(q, self.img_stage_two, 2, (self.time_per_battle - 20), False,)),
+                       threading.Thread(target=self.search_target, args=(q, self.img_complete, 3, 5, True,))]
 
             for thread in threads:
                 thread.start()
@@ -67,46 +71,46 @@ class AutoBattle:
                 print(f'Stage {data[1]} completed!')
                 sleep(data[2])
 
-                # Finish the battle round or not
+                # Finish the click round or not
                 if not data[3]:
-                    cls.battle(battle_round)
+                    self.click_target()
 
             else:
                 print('Battle processing......')
                 sleep(5)
-                cls.battle(battle_round)
+                self.click_target()
 
-    @classmethod
-    def run(cls):
-
-        cls.initialize()
-        start_time = time()
-
-        # Start battles
-        for i in range(cls.battles):
-            if not running:
-                break
-
+    def battle(self):
+        if running:
             # The battle starting message
-            battle_round = i + 1
             battle_start_time = time()
             battle_start_time_str = strftime('%H:%M:%S', localtime(battle_start_time))
-            print(f'----------Battle({battle_round}) starts at {battle_start_time_str}----------')
+            print(f'----------Battle({self.battle_round}) starts at {battle_start_time_str}----------')
 
-            cls.battle(battle_round)
+            self.click_target()
 
-            # The battle ending message
-            cls.finish_battles += 1
+            # Calculate costing time and print battle complete message
             battle_end_time = time()
             battle_spend_time = round(battle_end_time - battle_start_time, 2)
-            print(f'Completed Battle({battle_round}) in {battle_spend_time}s! \n')
+            print(f'Completed Battle({self.battle_round}) in {battle_spend_time}s! \n')
+            self.battle_round += 1
+            self.finish_battles += 1
+
+            if self.battle_round <= self.battles:
+                self.battle()
+
+    def run(self):
+
+        self.initialize()
+        start_time = time()
+        self.battle()
 
         # Calculate total cost time
         complete_time = time()
         final_time_cost = int(complete_time - start_time)
         final_cost_min = final_time_cost // 60
         final_cost_second = final_time_cost % 60
-        print(f'完成{cls.finish_battles}場戰鬥，總花費時間為 {final_cost_min}分{final_cost_second}秒')
+        print(f'完成{self.finish_battles}場戰鬥，總花費時間為 {final_cost_min}分{final_cost_second}秒')
 
 
 def on_release(key):
@@ -123,4 +127,4 @@ if __name__ == '__main__':
     lis = Listener(on_release=on_release)
     lis.start()
 
-    AutoBattle.run()
+    AutoBattle().run()
