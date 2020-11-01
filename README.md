@@ -1,8 +1,3 @@
----
-title: 'Arknights auto battle tool'
-disqus: hackmd
----
-
 Arknights auto battle tool
 ===
 This tool used pyautogui to automate battles.
