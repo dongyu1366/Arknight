@@ -8,26 +8,25 @@ from time import localtime, sleep, strftime, time
 
 class AutoBattle:
 
-    # Set up and load needed images
-    battles = int(input('要執行幾場戰鬥：'))
-    time_per_battle = int(input('預計每場戰鬥花費時間(s)：'))
-    finish_battles = 0
-
     img_stage_one = cv2.imread('pic/stage_one.png')
     img_stage_two = cv2.imread('pic/stage_two.png')
     img_complete = cv2.imread('pic/complete.png')
 
     def __init__(self):
-        self.battle_round = 1
+        self.battles = int(input('要執行幾場戰鬥：'))
+        self.time_per_battle = int(input('預計每場戰鬥花費時間(s)：'))
         self.finish_battles = 0
+        self.stage_one = 1
+        self.stage_two = 2
+        self.stage_three = 3
+        self.waiting_time_one = 3
+        self.waiting_time_two = self.time_per_battle - 20
+        self.waiting_time_three = 5
 
-    @classmethod
-    def initialize(cls):
+    def initialize(self):
         # Expected costing time
-        predict_time_cost = cls.time_per_battle * cls.battles
-        cost_min = predict_time_cost // 60
-        cost_second = predict_time_cost % 60
-        print(f'預計總花費時間為 {cost_min}分{cost_second}秒')
+        predict_time_cost = self.time_per_battle * self.battles
+        print(f'預計總花費時間為 {predict_time_cost // 60}分{predict_time_cost % 60}秒')
 
         # Messages before start
         print('自動戰鬥將於5秒後開始......')
@@ -36,8 +35,8 @@ class AutoBattle:
         print('============================')
         sleep(5)
 
-    @classmethod
-    def search_target(cls, q, image, stage, waiting_time, complete):
+    @staticmethod
+    def search_target(q, image, stage, waiting_time, complete):
         mouse_position = pyautogui.locateCenterOnScreen(image, confidence=0.8)
         if mouse_position:
             q.put(mouse_position)
@@ -49,10 +48,12 @@ class AutoBattle:
         if running:
             # Search target images
             q = Queue()
-            threads = [threading.Thread(target=self.search_target, args=(q, self.img_stage_one, 1, 3, False,)),
+            threads = [threading.Thread(target=self.search_target,
+                                        args=(q, self.img_stage_one, self.stage_one, self.waiting_time_one, False,)),
                        threading.Thread(target=self.search_target,
-                                        args=(q, self.img_stage_two, 2, (self.time_per_battle - 20), False,)),
-                       threading.Thread(target=self.search_target, args=(q, self.img_complete, 3, 5, True,))]
+                                        args=(q, self.img_stage_two, self.stage_two, self.waiting_time_two, False,)),
+                       threading.Thread(target=self.search_target,
+                                        args=(q, self.img_complete, self.stage_three, self.waiting_time_three, True,))]
 
             for thread in threads:
                 thread.start()
@@ -62,17 +63,18 @@ class AutoBattle:
 
             # Executed click
             if not q.empty():
-                data = []
-                for _ in range(4):
-                    data.append(q.get())
+                mouse_position = q.get()
+                stage = q.get()
+                waiting_time = q.get()
+                complete = q.get()
 
                 sleep(2)
-                pyautogui.click(data[0], clicks=2, interval=0.25)
-                print(f'Stage {data[1]} completed!')
-                sleep(data[2])
+                pyautogui.click(mouse_position, clicks=2, interval=0.25)
+                print(f'Stage {stage} completed!')
+                sleep(waiting_time)
 
-                # Finish the click round or not
-                if not data[3]:
+                # Complete all clicks or not
+                if not complete:
                     self.click_target()
 
             else:
@@ -83,20 +85,20 @@ class AutoBattle:
     def battle(self):
         if running:
             # The battle starting message
-            battle_start_time = time()
-            battle_start_time_str = strftime('%H:%M:%S', localtime(battle_start_time))
-            print(f'----------Battle({self.battle_round}) starts at {battle_start_time_str}----------')
+            current_battle_round = self.finish_battles + 1
+            current_battle_start_time = time()
+            current_battle_start_time_str = strftime('%H:%M:%S', localtime(current_battle_start_time))
+            print(f'----------Battle({current_battle_round}) starts at {current_battle_start_time_str}----------')
 
             self.click_target()
 
             # Calculate costing time and print battle complete message
-            battle_end_time = time()
-            battle_spend_time = round(battle_end_time - battle_start_time, 2)
-            print(f'Completed Battle({self.battle_round}) in {battle_spend_time}s! \n')
-            self.battle_round += 1
+            current_battle_end_time = time()
+            current_battle_cost_time = round(current_battle_end_time - current_battle_start_time, 2)
+            print(f'Completed Battle({current_battle_round}) in {current_battle_cost_time}s! \n')
             self.finish_battles += 1
 
-            if self.battle_round <= self.battles:
+            if self.finish_battles < self.battles:
                 self.battle()
 
     def run(self):
@@ -108,9 +110,7 @@ class AutoBattle:
         # Calculate total cost time
         complete_time = time()
         final_time_cost = int(complete_time - start_time)
-        final_cost_min = final_time_cost // 60
-        final_cost_second = final_time_cost % 60
-        print(f'完成{self.finish_battles}場戰鬥，總花費時間為 {final_cost_min}分{final_cost_second}秒')
+        print(f'完成{self.finish_battles}場戰鬥，總花費時間為 {final_time_cost // 60}分{final_time_cost % 60}秒')
 
 
 def on_release(key):
